@@ -1,0 +1,3429 @@
+---
+swagger: "2.0"
+info:
+  description: "Get edgey with the Section API"
+  version: "1.0.0"
+  title: "Section API"
+host: "aperture.section.io"
+basePath: "/api/v1"
+schemes:
+- "https"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+- "application/tar+gzip"
+security:
+- basic: []
+- sectionToken: []
+paths:
+  /account:
+    get:
+      tags:
+      - "Account"
+      description: "Get the list of accounts."
+      operationId: "accountList"
+      parameters: []
+      responses:
+        "200":
+          description: "Available accounts"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Account"
+    x-swagger-router-controller: "AccountApiController"
+  /account/graph:
+    get:
+      tags:
+      - "Account"
+      description: "Gets a graph of accounts/applications & environments"
+      operationId: "accountGraph"
+      parameters: []
+      responses:
+        "200":
+          description: "Available accounts"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/AccountGraph"
+    x-swagger-router-controller: "AccountApiController"
+  /account/create:
+    post:
+      tags:
+      - "Account"
+      description: "Create a new account and application for the current user"
+      operationId: "accountCreate"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Account create"
+        required: true
+        schema:
+          $ref: "#/definitions/AccountCreateRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The response object"
+          schema:
+            $ref: "#/definitions/CreateAccountResponse"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "AccountApiController"
+  /account/{accountId}:
+    get:
+      tags:
+      - "Account"
+      description: "Get basic information about an account."
+      operationId: "accountGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "The account object"
+          schema:
+            $ref: "#/definitions/Account"
+    x-swagger-router-controller: "AccountApiController"
+  /account/{accountId}/domains:
+    get:
+      tags:
+      - "Account"
+      description: "Get list of account's domains."
+      operationId: "accountDomainList"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "engaged"
+        in: "query"
+        description: "The flag to return engaged or disengaged domains."
+        required: false
+        type: "boolean"
+        x-exportParamName: "Engaged"
+        x-optionalDataType: "Bool"
+      responses:
+        "200":
+          description: "The domain list"
+          schema:
+            $ref: "#/definitions/DomainList"
+    x-swagger-router-controller: "AccountApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+    - "state"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/user:
+    get:
+      tags:
+      - "Application"
+      - "User"
+      description: "Gets list of users with permissions to account"
+      operationId: "accountUserList"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "List of users"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/AccountUser"
+    post:
+      tags:
+      - "User"
+      description: "Invite user to account"
+      operationId: "accountUserInvitePost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - in: "body"
+        name: "body"
+        description: "Invite user to account"
+        required: true
+        schema:
+          $ref: "#/definitions/AccountUserInviteRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Action response"
+          schema:
+            $ref: "#/definitions/AccountUserActionResult"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+  /account/{accountId}/user/{userId}:
+    get:
+      tags:
+      - "Application"
+      - "User"
+      description: "Gets list of users with permissions to account"
+      operationId: "accountUserGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "userId"
+        in: "path"
+        description: "The user identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "UserId"
+      responses:
+        "200":
+          description: "List of users"
+          schema:
+            $ref: "#/definitions/AccountUser"
+    post:
+      tags:
+      - "User"
+      - "Account"
+      description: "Update Account User for permissions changes"
+      operationId: "accountUserUpdate"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "userId"
+        in: "path"
+        description: "The user identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "UserId"
+      - in: "body"
+        name: "body"
+        description: "Updates the accountCapability for a specific user within a specific\
+          \ account"
+        required: true
+        schema:
+          $ref: "#/definitions/AccountUserUpdateParams"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Action response"
+          schema:
+            $ref: "#/definitions/AccountUserUpdateResult"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    delete:
+      tags:
+      - "User"
+      description: "Invite user to account"
+      operationId: "accountUserRemove"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "userId"
+        in: "path"
+        description: "The user identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "UserId"
+      responses:
+        "200":
+          description: "Action response"
+          schema:
+            $ref: "#/definitions/AccountUserActionResult"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /user:
+    get:
+      tags:
+      - "User"
+      description: "Get current user details"
+      operationId: "currentUserGet"
+      parameters: []
+      responses:
+        "200":
+          description: "The user object"
+          schema:
+            $ref: "#/definitions/User"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    post:
+      tags:
+      - "User"
+      description: "Update current user details"
+      operationId: "currentUserPost"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User details"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The user object"
+          schema:
+            $ref: "#/definitions/User"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /user/totp:
+    post:
+      tags:
+      - "User"
+      description: "Generate and return a new 2FA (TOTP) token"
+      operationId: "currentUserTotpPost"
+      parameters: []
+      responses:
+        "200":
+          description: "The TOTP token"
+          schema:
+            $ref: "#/definitions/Totp"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /user/resendverification:
+    post:
+      tags:
+      - "User"
+      description: "Resend email verification"
+      operationId: "currentUserVerificationPost"
+      parameters: []
+      responses:
+        "200":
+          description: "Request result"
+          schema:
+            $ref: "#/definitions/UserResendVerificationResult"
+        "404":
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /user/linkexternal:
+    post:
+      description: "Associate your user account with an external IDP"
+      operationId: "linkExternal"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Account create"
+        required: true
+        schema:
+          $ref: "#/definitions/body"
+        x-exportParamName: "Body"
+      responses:
+        "204":
+          description: "Association complete"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /user/{userId}/cache:
+    post:
+      description: "Clear internal cache for user"
+      operationId: "cacheClear"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "The user identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "UserId"
+      responses:
+        "200":
+          description: "Update complete"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "UserApiController"
+  /account/{accountId}/billingsummary:
+    get:
+      tags:
+      - "Account"
+      - "Billing"
+      description: "Get basic billing information for account."
+      operationId: "accountBillingGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "The account object"
+          schema:
+            $ref: "#/definitions/BillingSummary"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "BillingApiController"
+  /account/{accountId}/billinghistory:
+    get:
+      tags:
+      - "Account"
+      - "Billing"
+      description: "Get billing history"
+      operationId: "accountBillingHistoryGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "The account history object"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/BillingHistory"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "BillingApiController"
+  /account/{accountId}/application/:
+    get:
+      tags:
+      - "Application"
+      description: "Get the account's applications."
+      operationId: "applicationList"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "The account's applications"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ApplicationSummary"
+    x-swagger-router-controller: "ApplicationApiController"
+  /account/{accountId}/application/create:
+    post:
+      tags:
+      - "Application"
+      description: "Create a new application for the account"
+      operationId: "applicationCreate"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - in: "body"
+        name: "body"
+        description: "Application Create Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/ApplicationCreateRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The response object"
+          schema:
+            $ref: "#/definitions/Application"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ApplicationApiController"
+  /account/{accountId}/application/{applicationId}:
+    get:
+      tags:
+      - "Application"
+      description: "Get basic information about an application."
+      operationId: "applicationGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      responses:
+        "200":
+          description: "The application object"
+          schema:
+            $ref: "#/definitions/Application"
+    delete:
+      tags:
+      - "Application"
+      operationId: "applicationDelete"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      responses:
+        "204":
+          description: "Sucessful application delete"
+        "400":
+          description: "Malformed request"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "404":
+          description: "Application not found"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "403":
+          description: "Admin privileges are required"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Error occurred during deletion"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "ApplicationApiController"
+  /account/{accountId}/application/{applicationId}/split:
+    post:
+      tags:
+      - "Application"
+      description: "Split the url space of an existing application into a new application."
+      operationId: "applicationSplit"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - in: "body"
+        name: "body"
+        description: "Application Split Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/ApplicationSplitRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The new application object"
+          schema:
+            $ref: "#/definitions/Application"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ApplicationApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+  /account/{accountId}/application/{applicationId}/clone:
+    post:
+      tags:
+      - "Application"
+      description: "Clone the configuration of an existing application into a new\
+        \ application."
+      operationId: "applicationClone"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - in: "body"
+        name: "body"
+        description: "Application Clone Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/ApplicationCloneRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The new application object"
+          schema:
+            $ref: "#/definitions/Application"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ApplicationApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+  /account/{accountId}/application/{applicationId}/state:
+    post:
+      tags:
+      - "Application"
+      description: "Apply a cache ban to the default hosted environment for this application.\
+        \  Deprecated, please use the proxy state method"
+      operationId: "applicationStatePost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - in: "body"
+        name: "body"
+        description: "State update description"
+        required: true
+        schema:
+          $ref: "#/definitions/ApplicationStateUpdateRequest"
+        x-exportParamName: "Body"
+      deprecated: true
+      responses:
+        "200":
+          description: "The application object"
+          schema:
+            $ref: "#/definitions/ApplicationStateUpdateResult"
+    x-swagger-router-controller: "ApplicationStateApiController"
+  /account/{accountId}/application/{applicationId}/verifyEngaged:
+    get:
+      tags:
+      - "Application"
+      description: "Checks if any environment for this application is configured to\
+        \ route through Section"
+      operationId: "applicationVerifyEngaged"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      responses:
+        "200":
+          description: "Returns true any environment for this application is configured\
+            \ to route through Section"
+          schema:
+            $ref: "#/definitions/DomainEngaged"
+    x-swagger-router-controller: "ApplicationApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/stack:
+    get:
+      tags:
+      - "Environment"
+      description: "Get the proxy stack list for an environment"
+      operationId: "environmentStackGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "Returns an array of proxies for this environment's stack"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Proxy"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/ipRestrictions:
+    get:
+      tags:
+      - "Environment"
+      description: "Returns the list of IP addresses and CIDR blocks that are restricted\
+        \ from accessing this environment"
+      operationId: "environmentIpRestrictionsGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "List of IP addresses and CIDR blocks that are restricted from\
+            \ accessing this environment"
+          schema:
+            $ref: "#/definitions/IpRestrictions"
+    post:
+      tags:
+      - "Environment"
+      description: "Update the list of IP addresses and CIDR blocks that are restricted\
+        \ from accessing this environment"
+      operationId: "environmentIpRestrictionsPost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - in: "body"
+        name: "body"
+        description: "IP restrictions list"
+        required: true
+        schema:
+          $ref: "#/definitions/IpRestrictions"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "List of IP addresses and CIDR blocks that are restricted from\
+            \ accessing this environment"
+          schema:
+            $ref: "#/definitions/IpRestrictions"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+      - "restrictions-editor"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/outagepage:
+    get:
+      tags:
+      - "OutagePage"
+      description: "Lists the available outage pages"
+      operationId: "outagePageGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "Available outage pages"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/OutagePage"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    post:
+      tags:
+      - "OutagePage"
+      description: "Engage the specified outage page"
+      operationId: "outagePagePost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "pageName"
+        in: "query"
+        description: "Name of the outage page to engage"
+        required: true
+        type: "string"
+        x-exportParamName: "PageName"
+      responses:
+        "204":
+          description: "Outage page is engaged"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    delete:
+      tags:
+      - "OutagePage"
+      description: "Disengage the outage page for the specified environment"
+      operationId: "outagePageDelete"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "204":
+          description: "Outage page is disengaged"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "OutagePageApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/verifyEngaged:
+    get:
+      tags:
+      - "Environment"
+      description: "Checks if this environment is configured to route through Section"
+      operationId: "environmentVerifyEngaged"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "Returns true if the environment is configured to route through\
+            \ Section"
+          schema:
+            $ref: "#/definitions/EnvironmentEngaged"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/engaged:
+    get:
+      tags:
+      - "Environment"
+      description: "Returns the last known state of whether this environment is configured\
+        \ to route through Section without re-checking."
+      operationId: "environmentFetchEngaged"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "Returns true if the environment is configured to route through\
+            \ Section"
+          schema:
+            $ref: "#/definitions/EnvironmentEngaged"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /stack:
+    get:
+      tags:
+      - "Application"
+      description: "Returns an array of stacks"
+      operationId: "stackList"
+      parameters: []
+      responses:
+        "200":
+          description: "Available stacks"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Stack"
+    x-swagger-router-controller: "StackApiController"
+  /proxytemplate:
+    get:
+      tags:
+      - "Application"
+      description: "Returns an array of proxy templates that can be included in a\
+        \ proxy stack"
+      operationId: "proxyTemplateList"
+      parameters: []
+      responses:
+        "200":
+          description: "Available proxy templates"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ProxyTemplate"
+    x-swagger-router-controller: "ProxyTemplateApiController"
+  /proxytemplate/initialstate:
+    get:
+      tags:
+      - "Application"
+      description: "Returns a tar.gz containing the inital state of the proxy repository"
+      operationId: "proxyTemplateInitialState"
+      parameters:
+      - name: "proxyTemplateName"
+        in: "query"
+        description: "Proxy template identifier"
+        required: true
+        type: "string"
+        x-exportParamName: "ProxyTemplateName"
+      responses:
+        "200":
+          description: "Returns the tar.gz"
+          schema:
+            type: "file"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ProxyTemplateApiController"
+  /help/{helpId}:
+    get:
+      tags:
+      - "Help"
+      description: "Gets contextual help content by identifier"
+      operationId: "helpGet"
+      parameters:
+      - name: "helpId"
+        in: "path"
+        description: "Identifier for contextual help"
+        required: true
+        type: "string"
+        x-exportParamName: "HelpId"
+      responses:
+        "200":
+          description: "Content of the contextual help item"
+          schema:
+            $ref: "#/definitions/HelpContent"
+    x-swagger-router-controller: "HelpApiController"
+  /account/{accountId}/zone/{zoneName}:
+    get:
+      tags:
+      - "Zone"
+      description: "Get details of a zone"
+      operationId: "getZoneDetail"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "zoneName"
+        in: "path"
+        description: "Zone Name"
+        required: true
+        type: "string"
+        x-exportParamName: "ZoneName"
+      responses:
+        "200":
+          description: "Zone details"
+          schema:
+            $ref: "#/definitions/ZoneDetail"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    post:
+      tags:
+      - "Zone"
+      description: "Add or update a record for a zone"
+      operationId: "postZoneRecord"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "zoneName"
+        in: "path"
+        description: "Zone Name"
+        required: true
+        type: "string"
+        x-exportParamName: "ZoneName"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/body_1"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Updated zone details"
+          schema:
+            $ref: "#/definitions/ZoneDetail"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "ZoneApiController"
+  /account/{accountId}/zone/{zoneName}/{recordName}/{recordType}:
+    delete:
+      tags:
+      - "Zone"
+      description: "Delete a record from a zone"
+      operationId: "deleteZoneRecord"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "zoneName"
+        in: "path"
+        description: "Zone Name"
+        required: true
+        type: "string"
+        x-exportParamName: "ZoneName"
+      - name: "recordName"
+        in: "path"
+        description: "Record Name"
+        required: true
+        type: "string"
+        x-exportParamName: "RecordName"
+      - name: "recordType"
+        in: "path"
+        description: "Record Type"
+        required: true
+        type: "string"
+        x-exportParamName: "RecordType"
+      responses:
+        "200":
+          description: "Updated zone details"
+          schema:
+            $ref: "#/definitions/ZoneDetail"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "ZoneApiController"
+  /account/{accountId}/zone:
+    get:
+      tags:
+      - "Zone"
+      description: "List all zones for account"
+      operationId: "getZones"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      responses:
+        "200":
+          description: "Zone result"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ZoneSummary"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ZoneApiController"
+  /account/{accountId}/domain/{hostName}/zone:
+    get:
+      tags:
+      - "Zone"
+      description: "Find likely zone for domain"
+      operationId: "getDomainZone"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "Zone result"
+          schema:
+            $ref: "#/definitions/ZoneCandidate"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ZoneApiController"
+  /account/{accountId}/domain/{hostName}/renewCertificate:
+    post:
+      tags:
+      - "Domain"
+      description: "Renew certificate"
+      operationId: "renewCertificate"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "Certificate configuration"
+          schema:
+            type: "object"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "CertificateApiController"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/domain/{hostName}/https:
+    get:
+      tags:
+      - "Domain"
+      description: "Get https configuration"
+      operationId: "getConfiguration"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "The newly created environment"
+          schema:
+            $ref: "#/definitions/HttpsConfiguration"
+    post:
+      tags:
+      - "Domain"
+      description: "Set https configuration"
+      operationId: "postConfiguration"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      - in: "body"
+        name: "body"
+        description: "Https Set Configuration Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/HttpsSetConfiguration"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Certificate configuration"
+          schema:
+            $ref: "#/definitions/HttpsConfiguration"
+        "400":
+          description: "Malformed request"
+          schema:
+            $ref: "#/definitions/MultiErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "CertificateApiController"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/domain/{hostName}/verifyEngaged:
+    get:
+      tags:
+      - "Domain"
+      description: "Checks if domain is configured to route traffic"
+      operationId: "verifyEngaged"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "Returns true any environment for this application is configured\
+            \ to route through Section"
+          schema:
+            $ref: "#/definitions/DomainEngaged"
+        "404":
+          description: "Domain not found"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error - see message for details"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "DomainApiController"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/domain/{hostName}:
+    post:
+      tags:
+      - "Environment"
+      - "Domain"
+      description: "Add a domain to an environment. If there is no certificate passed\
+        \ in the body, a Let's Encrypt certificate will be generated for this domain"
+      operationId: "environmentAddDomain"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      - in: "body"
+        name: "body"
+        description: "Certificate payload"
+        required: false
+        schema:
+          $ref: "#/definitions/body_2"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Environment Summary"
+          schema:
+            $ref: "#/definitions/EnvironmentSummary"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    delete:
+      tags:
+      - "Environment"
+      - "Domain"
+      description: "Remove a domain from an environment. Will also remove any certificate\
+        \ linked to the domain"
+      operationId: "environmentRemoveDomain"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "hostName"
+        in: "path"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "Environment Summary"
+          schema:
+            $ref: "#/definitions/EnvironmentSummary"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "EnvironmentApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/enableHostedDNS:
+    post:
+      tags:
+      - "Environment"
+      - "Zone"
+      description: "Enable Section Hosted DNS for the environment's domain"
+      operationId: "enableHostedDNS"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/body_3"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Zone result"
+          schema:
+            $ref: "#/definitions/ZoneSummary"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ZoneApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/configuration:
+    get:
+      tags:
+      - "Environment"
+      description: "Get configuration for the environment"
+      operationId: "getConfiguration"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "Environment configuration"
+          schema:
+            $ref: "#/definitions/EnvironmentConfiguration"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    patch:
+      tags:
+      - "Environment"
+      description: "Patch configuration for the environment"
+      operationId: "patchConfiguration"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PatchRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "Patch result"
+          schema:
+            $ref: "#/definitions/EnvironmentConfiguration"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/update:
+    patch:
+      tags:
+      - "Proxy"
+      description: "Patch the proxy with a JSON Patch. See - RFC6902 https://tools.ietf.org/html/rfc6902\
+        \ - http://jsonpatch.com/"
+      operationId: "patchFile"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PatchRequest"
+        x-exportParamName: "Body"
+      - name: "filepath"
+        in: "header"
+        description: "the path to the file you want to modify. Case-sensitive."
+        required: true
+        type: "string"
+        x-exportParamName: "Filepath"
+      responses:
+        "200":
+          description: "Patch result"
+          schema:
+            type: "object"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        default:
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /origin:
+    get:
+      tags:
+      - "Application"
+      description: "Gets origin endpoint from hostname"
+      operationId: "resolveGet"
+      parameters:
+      - name: "hostName"
+        in: "query"
+        description: "Host Name"
+        required: true
+        type: "string"
+        x-exportParamName: "HostName"
+      responses:
+        "200":
+          description: "Resolved origin endpoint"
+          schema:
+            $ref: "#/definitions/Origin"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Resolved origin endpoint"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "OriginApiController"
+  /account/{accountId}/application/{applicationId}/environment:
+    get:
+      tags:
+      - "Environment"
+      description: "Get the application's environments."
+      operationId: "environmentList"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      responses:
+        "200":
+          description: "The application's environments"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/EnvironmentSummary"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/create:
+    post:
+      tags:
+      - "Environment"
+      description: "Create an application environment."
+      operationId: "environmentCreate"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - in: "body"
+        name: "body"
+        description: "Environment Create Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/EnvironmentCreateRequest"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The newly created environment"
+          schema:
+            $ref: "#/definitions/EnvironmentSummary"
+        "400":
+          description: "Malformed request"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}:
+    get:
+      tags:
+      - "Environment"
+      description: "Get the environment."
+      operationId: "environmentGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "The environment"
+          schema:
+            $ref: "#/definitions/EnvironmentSummary"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/egress:
+    get:
+      tags:
+      - "Environment"
+      description: "Get the environment's egress configuration."
+      operationId: "egressGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "The environment's egress configuration"
+          schema:
+            $ref: "#/definitions/Egress"
+    post:
+      tags:
+      - "Environment"
+      description: "Get the environment's egress configuration."
+      operationId: "egressPost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - in: "body"
+        name: "body"
+        description: "Environment Egress Payload"
+        required: true
+        schema:
+          $ref: "#/definitions/Egress"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The environment's egress configuration"
+          schema:
+            $ref: "#/definitions/Egress"
+        "400":
+          description: "Invalid parameters"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+        "500":
+          description: "Server error"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "EnvironmentApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/proxy/{proxyName}/configuration:
+    get:
+      tags:
+      - "Proxy"
+      description: "Get the proxy's configuration."
+      operationId: "configurationGet"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "proxyName"
+        in: "path"
+        description: "The proxy identifier"
+        required: true
+        type: "string"
+        maxLength: 32
+        pattern: "^[A-Za-z0-9]+$"
+        x-exportParamName: "ProxyName"
+      responses:
+        "200":
+          description: "The proxy's configuration"
+          schema:
+            $ref: "#/definitions/ProxyConfiguration"
+    post:
+      tags:
+      - "Proxy"
+      description: "Set the proxy's configuration."
+      operationId: "configurationPost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "proxyName"
+        in: "path"
+        description: "The proxy identifier"
+        required: true
+        type: "string"
+        maxLength: 32
+        pattern: "^[A-Za-z0-9]+$"
+        x-exportParamName: "ProxyName"
+      - in: "body"
+        name: "body"
+        description: "Proxy configuration update details"
+        required: true
+        schema:
+          $ref: "#/definitions/ProxyConfiguration"
+        x-exportParamName: "Body"
+      responses:
+        "200":
+          description: "The proxy's configuration"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+      x-swagger-section-capabilities:
+      - "admin"
+    x-swagger-router-controller: "ProxyApiController"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/proxy/{proxyName}/state:
+    post:
+      tags:
+      - "Proxy"
+      description: "Applies a varnish ban expression to the specified proxy"
+      operationId: "proxyStatePost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "proxyName"
+        in: "path"
+        description: "The proxy identifier"
+        required: true
+        type: "string"
+        maxLength: 32
+        pattern: "^[A-Za-z0-9]+$"
+        x-exportParamName: "ProxyName"
+      - name: "banExpression"
+        in: "query"
+        description: "The varnish ban expression to apply"
+        required: false
+        type: "string"
+        default: "req.url ~ /"
+        x-exportParamName: "BanExpression"
+        x-optionalDataType: "String"
+      - name: "async"
+        in: "query"
+        description: "If true the call will return immediately, not waiting for all\
+          \ delivery nodes to complete the ban"
+        required: false
+        type: "boolean"
+        default: false
+        x-exportParamName: "Async"
+        x-optionalDataType: "Bool"
+      responses:
+        "204":
+          description: "Ban was applied successfully"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "ProxyApiController"
+    x-swagger-section-2fa-bypass-permitted: true
+    x-swagger-section-capabilities:
+    - "admin"
+    - "state"
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/proxy/{proxyName}/{operationName}:
+    post:
+      tags:
+      - "Proxy"
+      description: "Send a message to a specified proxy"
+      operationId: "proxyOperationAction"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      - name: "proxyName"
+        in: "path"
+        description: "The proxy identifier"
+        required: true
+        type: "string"
+        maxLength: 32
+        pattern: "^[A-Za-z0-9]+$"
+        x-exportParamName: "ProxyName"
+      - name: "operationName"
+        in: "path"
+        required: true
+        type: "string"
+        x-exportParamName: "OperationName"
+      - name: "operationParameter"
+        in: "query"
+        description: "Parmeter to send with the message to a proxy"
+        required: false
+        type: "string"
+        x-exportParamName: "OperationParameter"
+        x-optionalDataType: "String"
+      responses:
+        "200":
+          description: "Message was sent successfully"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/MultiErrorModel"
+    x-swagger-router-controller: "ProxyApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+    - "state"
+    x-swagger-section-2fa-bypass-permitted: true
+  /account/{accountId}/application/{applicationId}/environment/{environmentName}/dnsbypass:
+    post:
+      tags:
+      - "Environment"
+      description: "Request the bypassing of Section for this environment. All traffic\
+        \ will be directed to the environment's origin address."
+      operationId: "environmentDnsBypassPost"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "DNS Bypass was successfully requested"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    delete:
+      tags:
+      - "Environment"
+      description: "Remove the bypass of Section for this environment. All traffic\
+        \ will be directed to Section's servers."
+      operationId: "environmentDnsBypassDelete"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "The account identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "AccountId"
+      - name: "applicationId"
+        in: "path"
+        description: "The application identifier number"
+        required: true
+        type: "integer"
+        format: "int64"
+        x-exportParamName: "ApplicationId"
+      - name: "environmentName"
+        in: "path"
+        description: "The name of the environment"
+        required: true
+        type: "string"
+        x-exportParamName: "EnvironmentName"
+      responses:
+        "200":
+          description: "DNS Bypass was successfully removed"
+        default:
+          description: "Error result"
+          schema:
+            $ref: "#/definitions/ErrorModel"
+    x-swagger-router-controller: "EnvironmentApiController"
+    x-swagger-section-capabilities:
+    - "admin"
+securityDefinitions:
+  basic:
+    type: "basic"
+  sectionToken:
+    type: "apiKey"
+    name: "section-token"
+    in: "header"
+definitions:
+  ErrorModel:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+    example:
+      message: "message"
+  MultiErrorModel:
+    type: "object"
+    properties:
+      messages:
+        type: "array"
+        items:
+          type: "string"
+  Account:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      account_name:
+        type: "string"
+        description: "user defined account name"
+      is_admin:
+        type: "boolean"
+        description: "does authenticated account have access to account"
+      billing_user:
+        type: "integer"
+        description: "owner user id"
+      requires_2fa:
+        type: "boolean"
+        description: "All users on this account must log in with 2FA"
+      owner:
+        $ref: "#/definitions/User"
+    example:
+      is_admin: true
+      owner:
+        requires2fa: true
+        company_name: "company_name"
+        verified: true
+        last_name: "last_name"
+        phone_number: "phone_number"
+        id: 1
+        enforce2fa: true
+        first_name: "first_name"
+        email: "email"
+      account_name: "account_name"
+      billing_user: 6
+      id: 0
+      href: "href"
+      requires_2fa: true
+  DomainList:
+    type: "array"
+    items:
+      $ref: "#/definitions/DomainList_inner"
+  CreateAccountResponse:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      account_name:
+        type: "string"
+      applications:
+        type: "array"
+        items:
+          $ref: "#/definitions/CreateAccountResponse_applications"
+    example:
+      account_name: "account_name"
+      id: 0
+      href: "href"
+      applications:
+      - application_name: "application_name"
+        id: 6
+        href: "href"
+      - application_name: "application_name"
+        id: 6
+        href: "href"
+  ApplicationSummary:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      application_name:
+        type: "string"
+    example:
+      application_name: "application_name"
+      id: 0
+      href: "href"
+  AccountGraph:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      account_name:
+        type: "string"
+      applications:
+        type: "array"
+        items:
+          $ref: "#/definitions/AccountGraph_applications"
+    example:
+      account_name: "account_name"
+      id: 0
+      href: "href"
+      applications:
+      - application_name: "application_name"
+        environments:
+        - id: 1
+          environment_name: "environment_name"
+        - id: 1
+          environment_name: "environment_name"
+        id: 6
+        href: "href"
+        path_prefixes:
+        - "path_prefixes"
+        - "path_prefixes"
+        path_prefix: "path_prefix"
+      - application_name: "application_name"
+        environments:
+        - id: 1
+          environment_name: "environment_name"
+        - id: 1
+          environment_name: "environment_name"
+        id: 6
+        href: "href"
+        path_prefixes:
+        - "path_prefixes"
+        - "path_prefixes"
+        path_prefix: "path_prefix"
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      email:
+        type: "string"
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      company_name:
+        type: "string"
+      phone_number:
+        type: "string"
+      verified:
+        type: "boolean"
+      requires2fa:
+        type: "boolean"
+      enforce2fa:
+        type: "boolean"
+    example:
+      requires2fa: true
+      company_name: "company_name"
+      verified: true
+      last_name: "last_name"
+      phone_number: "phone_number"
+      id: 1
+      enforce2fa: true
+      first_name: "first_name"
+      email: "email"
+  AccountUser:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      email:
+        type: "string"
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      phone_number:
+        type: "string"
+      accountCapability:
+        type: "string"
+    example:
+      last_name: "last_name"
+      phone_number: "phone_number"
+      id: 0
+      accountCapability: "accountCapability"
+      first_name: "first_name"
+      email: "email"
+  Stack:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      label:
+        type: "string"
+      description:
+        type: "string"
+    example:
+      name: "name"
+      description: "description"
+      label: "label"
+  ProxyTemplate:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      label:
+        type: "string"
+      description:
+        type: "string"
+      image:
+        type: "string"
+      initialStateUri:
+        type: "string"
+    example:
+      image: "image"
+      name: "name"
+      description: "description"
+      label: "label"
+      initialStateUri: "initialStateUri"
+  Application:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      application_name:
+        type: "string"
+      path_prefix:
+        type: "string"
+      path_prefixes:
+        type: "array"
+        items:
+          type: "string"
+    example:
+      application_name: "application_name"
+      id: 0
+      href: "href"
+      path_prefixes:
+      - "path_prefixes"
+      - "path_prefixes"
+      path_prefix: "path_prefix"
+  ApplicationStateUpdateRequest:
+    type: "object"
+    required:
+    - "proxy"
+    properties:
+      proxy:
+        type: "string"
+        enum:
+        - "varnish"
+        default: "varnish"
+      ban:
+        type: "string"
+        default: "req.url ~ /"
+    example:
+      proxy: "varnish"
+      ban: "req.url ~ /"
+    additionalProperties: false
+  ApplicationStateUpdateResult:
+    type: "object"
+    properties:
+      success:
+        type: "boolean"
+      description:
+        type: "string"
+    example:
+      success: true
+      description: "description"
+  AccountCreateRequest:
+    type: "object"
+    required:
+    - "hostname"
+    - "name"
+    properties:
+      name:
+        type: "string"
+      hostname:
+        type: "string"
+      origin:
+        type: "string"
+      stackName:
+        type: "string"
+        default: "varnish-5.1-basic"
+    example:
+      hostname: "hostname"
+      origin: "origin"
+      name: "name"
+      stackName: "varnish-5.1-basic"
+    additionalProperties: false
+  ApplicationCreateRequest:
+    type: "object"
+    required:
+    - "hostname"
+    properties:
+      hostname:
+        type: "string"
+      origin:
+        type: "string"
+      stackName:
+        type: "string"
+        default: "varnish-5.1-basic"
+    example:
+      hostname: "hostname"
+      origin: "origin"
+      stackName: "varnish-5.1-basic"
+    additionalProperties: false
+  ApplicationSplitRequest:
+    type: "object"
+    required:
+    - "pathPrefix"
+    properties:
+      pathPrefix:
+        type: "string"
+    example:
+      pathPrefix: "pathPrefix"
+    additionalProperties: false
+  ApplicationCloneRequest:
+    type: "object"
+    required:
+    - "hostname"
+    properties:
+      hostname:
+        type: "string"
+      origin:
+        type: "string"
+    example:
+      hostname: "hostname"
+      origin: "origin"
+    additionalProperties: false
+  DomainEngaged:
+    type: "object"
+    properties:
+      is_engaged:
+        type: "boolean"
+      hostnames:
+        type: "object"
+        properties: {}
+    example:
+      hostnames: "{}"
+      is_engaged: true
+  EnvironmentCreateRequest:
+    type: "object"
+    required:
+    - "domain_name"
+    - "name"
+    - "source_environment_name"
+    properties:
+      name:
+        type: "string"
+        pattern: "^[A-Za-z][A-Za-z0-9]*$"
+      source_environment_name:
+        type: "string"
+        pattern: "^[A-Za-z0-9]+$"
+      domain_name:
+        type: "string"
+    example:
+      domain_name: "domain_name"
+      name: "name"
+      source_environment_name: "source_environment_name"
+    additionalProperties: false
+  Proxy:
+    type: "object"
+    required:
+    - "href"
+    - "image"
+    - "name"
+    - "proxyType"
+    properties:
+      href:
+        type: "string"
+      name:
+        type: "string"
+      image:
+        type: "string"
+      proxyType:
+        $ref: "#/definitions/ProxyType"
+    example:
+      image: "image"
+      name: "name"
+      proxyType:
+        prefix: "prefix"
+        name: "name"
+      href: "href"
+  HttpsConfiguration:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+      configured:
+        type: "boolean"
+      common_name:
+        type: "string"
+      alternate_names:
+        type: "array"
+        items:
+          type: "string"
+      issuer:
+        type: "string"
+      expires:
+        type: "string"
+      certificates:
+        type: "array"
+        items:
+          type: "string"
+      hpkp_fingerprint:
+        type: "string"
+      hostname_valid:
+        type: "boolean"
+    example:
+      configured: true
+      alternate_names:
+      - "alternate_names"
+      - "alternate_names"
+      expires: "expires"
+      hpkp_fingerprint: "hpkp_fingerprint"
+      hostname_valid: true
+      certificates:
+      - "certificates"
+      - "certificates"
+      type: "type"
+      common_name: "common_name"
+      issuer: "issuer"
+  HttpsSetConfiguration:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+      verify_only:
+        type: "boolean"
+      public_certificates:
+        type: "string"
+      private_key:
+        type: "string"
+        x-swagger-section-sensitive: true
+    example:
+      public_certificates: "public_certificates"
+      private_key: "private_key"
+      type: "type"
+      verify_only: true
+  ProxyType:
+    type: "object"
+    required:
+    - "name"
+    - "prefix"
+    properties:
+      name:
+        type: "string"
+      prefix:
+        type: "string"
+    example:
+      prefix: "prefix"
+      name: "name"
+  HelpContent:
+    type: "object"
+    required:
+    - "content"
+    - "title"
+    properties:
+      title:
+        type: "string"
+      content:
+        type: "string"
+    example:
+      title: "title"
+      content: "content"
+  EnvironmentSummary:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      environment_name:
+        type: "string"
+      domains:
+        type: "array"
+        items:
+          $ref: "#/definitions/DomainSummary"
+      is_hosted:
+        type: "boolean"
+      dns_bypass_address:
+        type: "string"
+    example:
+      dns_bypass_address: "dns_bypass_address"
+      domains:
+      - mode: "mode"
+        name: "name"
+        cname: "cname"
+        zoneName: "zoneName"
+      - mode: "mode"
+        name: "name"
+        cname: "cname"
+        zoneName: "zoneName"
+      id: 0
+      href: "href"
+      is_hosted: true
+      environment_name: "environment_name"
+  EnvironmentEngaged:
+    type: "object"
+    properties:
+      is_engaged:
+        type: "boolean"
+    example:
+      is_engaged: true
+  ProxyConfiguration:
+    type: "object"
+    required:
+    - "content"
+    properties:
+      personality:
+        type: "string"
+        description: "An identifier of the source system - used for making compatibility\
+          \ changes"
+      content:
+        type: "string"
+        description: "The configuration"
+      message:
+        type: "string"
+        description: "Message describing the configuration change"
+      features:
+        type: "string"
+        description: "JSON blob containing features for this proxy"
+      generatedContent:
+        type: "string"
+        description: "Content of the generated code"
+    example:
+      features: "features"
+      personality: "personality"
+      generatedContent: "generatedContent"
+      message: "message"
+      content: "content"
+  ZoneCandidate:
+    type: "object"
+    properties:
+      zone_name:
+        type: "string"
+        description: "Name of zone"
+      status:
+        type: "string"
+        description: "Status of zone"
+    example:
+      zone_name: "zone_name"
+      status: "status"
+  ZoneSummary:
+    type: "object"
+    properties:
+      zone_name:
+        type: "string"
+      name_servers:
+        type: "array"
+        items:
+          type: "string"
+    example:
+      name_servers:
+      - "name_servers"
+      - "name_servers"
+      zone_name: "zone_name"
+  ZoneRecord:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      ttl:
+        type: "integer"
+        format: "int32"
+      record_type:
+        type: "string"
+      record_data:
+        type: "array"
+    example:
+      record_data: ""
+      name: "name"
+      ttl: 0
+      record_type: "record_type"
+  ZoneDetail:
+    type: "object"
+    properties:
+      zone_name:
+        type: "string"
+      name_servers:
+        type: "array"
+        items:
+          type: "string"
+      records:
+        type: "array"
+        items:
+          $ref: "#/definitions/ZoneRecord"
+      environments:
+        type: "object"
+        additionalProperties:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              environment_id:
+                type: "integer"
+              environment_name:
+                type: "string"
+              application_id:
+                type: "integer"
+              application_name:
+                type: "string"
+    example:
+      records:
+      - record_data: ""
+        name: "name"
+        ttl: 0
+        record_type: "record_type"
+      - record_data: ""
+        name: "name"
+        ttl: 0
+        record_type: "record_type"
+      environments:
+        key:
+        - "{}"
+        - "{}"
+      name_servers:
+      - "name_servers"
+      - "name_servers"
+      zone_name: "zone_name"
+  Origin:
+    type: "object"
+    properties:
+      hostname:
+        type: "string"
+        description: "Hostname"
+      hostname_bare:
+        type: "boolean"
+        description: "Hostname on a bare domain"
+      hostname_duplicate:
+        type: "boolean"
+        description: "Hostname already exists on Section"
+      origin_detected:
+        type: "boolean"
+        description: "Origin detected"
+      origin:
+        type: "string"
+        description: "Detected origin endpoint"
+      origin_fixed:
+        type: "boolean"
+        description: "Detected origin fixed endpoint"
+      origin_lookup:
+        type: "string"
+        description: "Detected origin ip"
+      origin_multiple:
+        type: "boolean"
+        description: "Origin multiple records"
+      origin_hint:
+        type: "string"
+        description: "Origin hint found"
+      thirdparty_detected:
+        type: "boolean"
+        description: "Thirdparty detected"
+      thirdparty_name:
+        type: "string"
+        description: "Thirdparty name"
+      origin_app_name:
+        type: "string"
+        description: "Detected application runnning on the origin"
+    example:
+      hostname_duplicate: true
+      origin_lookup: "origin_lookup"
+      origin_detected: true
+      origin_fixed: true
+      hostname: "hostname"
+      hostname_bare: true
+      origin: "origin"
+      origin_hint: "origin_hint"
+      origin_app_name: "origin_app_name"
+      thirdparty_detected: true
+      thirdparty_name: "thirdparty_name"
+      origin_multiple: true
+  BillingSummary:
+    type: "object"
+    properties:
+      enabled:
+        type: "boolean"
+        description: "Billing enabled"
+      provisioning:
+        type: "boolean"
+        description: "Billing provisioning"
+      user:
+        type: "string"
+        description: "Billing linked to user"
+      meter_type:
+        type: "string"
+        description: "Meter type for account"
+      outstanding_balance:
+        type: "number"
+        description: "Account balance for period"
+      period_next:
+        type: "string"
+        description: "Next billing period starts"
+      period_started:
+        type: "string"
+        description: "Billing period started"
+      billing_portal:
+        type: "string"
+        description: "Billing portal URL"
+      state:
+        type: "string"
+        description: "Account status"
+    example:
+      period_next: "period_next"
+      period_started: "period_started"
+      billing_portal: "billing_portal"
+      outstanding_balance: 0.80082819046101150206595775671303272247314453125
+      provisioning: true
+      state: "state"
+      meter_type: "meter_type"
+      user: "user"
+      enabled: true
+  BillingHistory:
+    type: "object"
+    properties:
+      date:
+        type: "string"
+        description: "Billing period (UTC)"
+      total_cost:
+        type: "number"
+        description: "Total cost of bandwidth or pageview"
+      view_base:
+        type: "number"
+        description: "Page views processed by Platform Routing Tier"
+      view_varnish:
+        type: "number"
+        description: "Page views processed by Varnish"
+      view_modsecurity:
+        type: "number"
+        description: "Page views processed by ModSecurity"
+      data_au:
+        type: "number"
+        description: "Gigabytes processed through Australia"
+      data_us:
+        type: "number"
+        description: "Gigabytes processed through North America"
+      data_eu:
+        type: "number"
+        description: "Gigabytes processed through Europe"
+      data_varnish:
+        type: "number"
+        description: "Gigabytes processed by Varnish"
+      data_modsecurity:
+        type: "number"
+        description: "Gigabytes processed by ModSecurity"
+    example:
+      date: "date"
+      data_eu: 7.061401241503109105224211816675961017608642578125
+      data_varnish: 9.301444243932575517419536481611430644989013671875
+      total_cost: 0.80082819046101150206595775671303272247314453125
+      data_us: 2.3021358869347654518833223846741020679473876953125
+      data_modsecurity: 3.61607674925191080461672754609026014804840087890625
+      view_varnish: 1.46581298050294517310021547018550336360931396484375
+      data_au: 5.63737665663332876420099637471139430999755859375
+      view_modsecurity: 5.962133916683182377482808078639209270477294921875
+      view_base: 6.02745618307040320615897144307382404804229736328125
+  UserResendVerificationResult:
+    type: "object"
+    properties:
+      success:
+        type: "boolean"
+      message:
+        type: "string"
+    example:
+      success: true
+      message: "message"
+  AccountUserInviteRequest:
+    type: "object"
+    properties:
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      email:
+        type: "string"
+      phone_number:
+        type: "string"
+    example:
+      last_name: "last_name"
+      phone_number: "phone_number"
+      first_name: "first_name"
+      email: "email"
+  AccountUserActionResult:
+    type: "object"
+    properties:
+      success:
+        type: "boolean"
+      message:
+        type: "string"
+    example:
+      success: true
+      message: "message"
+  AccountUserUpdateParams:
+    type: "object"
+    required:
+    - "accountCapability"
+    properties:
+      accountCapability:
+        type: "string"
+    example:
+      accountCapability: "accountCapability"
+  AccountUserUpdateResult:
+    type: "object"
+    required:
+    - "message"
+    - "success"
+    properties:
+      success:
+        type: "boolean"
+      message:
+        type: "string"
+      user:
+        $ref: "#/definitions/AccountUser"
+    example:
+      success: true
+      message: "message"
+      user:
+        last_name: "last_name"
+        phone_number: "phone_number"
+        id: 0
+        accountCapability: "accountCapability"
+        first_name: "first_name"
+        email: "email"
+  EnvironmentConfiguration:
+    type: "object"
+  PatchRequest:
+    type: "array"
+    items:
+      $ref: "#/definitions/RFC6902Operation"
+  RFC6902Operation:
+    type: "object"
+    required:
+    - "op"
+    - "path"
+    properties:
+      op:
+        type: "string"
+        description: "The operation to be performed"
+        enum:
+        - "add"
+        - "remove"
+        - "replace"
+        - "move"
+        - "copy"
+        - "test"
+      path:
+        type: "string"
+        description: "A JSON-Pointer"
+      value:
+        type: "object"
+        description: "The value to be used within the operations."
+        properties: {}
+      from:
+        type: "string"
+        description: "A string containing a JSON Pointer value."
+    description: "A JSONPatch document as defined by RFC 6902"
+  DomainSummary:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      zoneName:
+        type: "string"
+      cname:
+        type: "string"
+      mode:
+        type: "string"
+    example:
+      mode: "mode"
+      name: "name"
+      cname: "cname"
+      zoneName: "zoneName"
+  Totp:
+    type: "object"
+    properties:
+      base32text:
+        type: "string"
+      svg:
+        type: "string"
+      url:
+        type: "string"
+      png_data_uri:
+        type: "string"
+    example:
+      svg: "svg"
+      base32text: "base32text"
+      png_data_uri: "png_data_uri"
+      url: "url"
+  OutagePage:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      engaged:
+        type: "boolean"
+    example:
+      engaged: true
+      name: "name"
+  EgressOrigin:
+    type: "object"
+    required:
+    - "address"
+    properties:
+      address:
+        $ref: "#/definitions/host-address-dns-or-ip"
+      http_port:
+        type: "integer"
+      https_port:
+        type: "integer"
+      host_header:
+        $ref: "#/definitions/host-address-dns"
+      disable_keepalive:
+        type: "boolean"
+      keepalive_seconds:
+        type: "integer"
+        minimum: 1
+        maximum: 240
+      tls_name:
+        $ref: "#/definitions/host-address-dns"
+    example:
+      https_port: 1
+      address: {}
+      keepalive_seconds: 143
+      disable_keepalive: true
+      http_port: 6
+      host_header: {}
+    additionalProperties: false
+  EgressOrigins:
+    type: "object"
+    required:
+    - "default"
+    properties:
+      default:
+        $ref: "#/definitions/EgressOrigin"
+    example:
+      default:
+        https_port: 1
+        address: {}
+        keepalive_seconds: 143
+        disable_keepalive: true
+        http_port: 6
+        host_header: {}
+    additionalProperties:
+      $ref: "#/definitions/EgressOrigin"
+    x-jsonschema-additionalProperties: false
+    x-jsonschema-patternProperties:
+      ^[_0-9A-Za-z-]{1,50}$:
+        $ref: "#/definitions/EgressOrigin"
+  Egress:
+    type: "object"
+    required:
+    - "origins"
+    properties:
+      remove_request_headers:
+        type: "array"
+        items:
+          $ref: "#/definitions/http-header-field-name"
+        maxItems: 50
+        minItems: 1
+      enable_sni:
+        type: "boolean"
+      upstream_response_timeout_seconds:
+        type: "integer"
+      verify_certificate:
+        type: "boolean"
+      proxy_acme_challenge:
+        type: "boolean"
+      origins:
+        $ref: "#/definitions/EgressOrigins"
+    example:
+      proxy_acme_challenge: true
+      origins:
+        default:
+          https_port: 1
+          address: {}
+          keepalive_seconds: 143
+          disable_keepalive: true
+          http_port: 6
+          host_header: {}
+      remove_request_headers:
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      - {}
+      upstream_response_timeout_seconds: 0
+      enable_sni: true
+      verify_certificate: true
+    additionalProperties: false
+  http-header-field-name:
+    type: "string"
+    minLength: 1
+    maxLength: 256
+    pattern: "^[!#$%&'*+\\-.^_`|~0-9A-Za-z]+$"
+  host-address-dns-or-ip:
+    type: "string"
+    minLength: 1
+    maxLength: 256
+    pattern: "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\
+      -]*[A-Za-z0-9])$"
+  host-address-dns:
+    type: "string"
+    minLength: 1
+    maxLength: 256
+    pattern: "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\\
+      -]*[A-Za-z0-9])$"
+  egress-origin-name:
+    type: "string"
+    pattern: "^[_0-9A-Za-z]{1,50}$"
+  IpRestrictions:
+    type: "object"
+    required:
+    - "ip_blacklist"
+    properties:
+      ip_blacklist:
+        type: "array"
+        items:
+          type: "string"
+          pattern: "^(?=\\d+\\.\\d+\\.\\d+\\.\\d+($|\\/))(([1-9]?\\d|1\\d\\d|2[0-4]\\\
+            d|25[0-5])\\.?){4}(\\/([0-9]|[1-2]\\d|3[0-2]))?$"
+    example:
+      ip_blacklist:
+      - "ip_blacklist"
+      - "ip_blacklist"
+  body:
+    type: "object"
+    required:
+    - "payload"
+    properties:
+      payload:
+        type: "string"
+    additionalProperties: false
+  body_1:
+    type: "object"
+    required:
+    - "recordData"
+    - "recordName"
+    - "recordType"
+    - "ttl"
+    properties:
+      recordName:
+        type: "string"
+        description: "Record Name"
+      recordType:
+        type: "string"
+        description: "Record Type"
+      originalRecordType:
+        type: "string"
+        description: "Original Record Type"
+      ttl:
+        type: "integer"
+        format: "int32"
+        description: "Time to live (seconds)"
+      recordData:
+        type: "array"
+        description: "Record Data"
+  body_2:
+    type: "object"
+    properties:
+      public_certificates:
+        type: "string"
+      private_key:
+        type: "string"
+        x-swagger-section-sensitive: true
+  body_3:
+    type: "object"
+    required:
+    - "zoneName"
+    properties:
+      zoneName:
+        type: "string"
+        description: "Zone Name"
+      hostname:
+        type: "string"
+        description: "Hostname"
+  DomainList_inner:
+    type: "object"
+    properties:
+      domain_name:
+        type: "string"
+      engaged:
+        type: "boolean"
+  CreateAccountResponse_applications:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      application_name:
+        type: "string"
+    example:
+      application_name: "application_name"
+      id: 6
+      href: "href"
+  AccountGraph_environments:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      environment_name:
+        type: "string"
+    example:
+      id: 1
+      environment_name: "environment_name"
+  AccountGraph_applications:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      href:
+        type: "string"
+      application_name:
+        type: "string"
+      path_prefix:
+        type: "string"
+      path_prefixes:
+        type: "array"
+        items:
+          type: "string"
+      environments:
+        type: "array"
+        items:
+          $ref: "#/definitions/AccountGraph_environments"
+    example:
+      application_name: "application_name"
+      environments:
+      - id: 1
+        environment_name: "environment_name"
+      - id: 1
+        environment_name: "environment_name"
+      id: 6
+      href: "href"
+      path_prefixes:
+      - "path_prefixes"
+      - "path_prefixes"
+      path_prefix: "path_prefix"
+parameters:
+  accountId:
+    name: "accountId"
+    in: "path"
+    description: "The account identifier number"
+    required: true
+    type: "integer"
+    format: "int64"
+    x-exportParamName: "AccountId"
+  applicationId:
+    name: "applicationId"
+    in: "path"
+    description: "The application identifier number"
+    required: true
+    type: "integer"
+    format: "int64"
+    x-exportParamName: "ApplicationId"
+  userId:
+    name: "userId"
+    in: "path"
+    description: "The user identifier number"
+    required: true
+    type: "integer"
+    format: "int64"
+    x-exportParamName: "UserId"
+  environmentName:
+    name: "environmentName"
+    in: "path"
+    description: "The name of the environment"
+    required: true
+    type: "string"
+    x-exportParamName: "EnvironmentName"
+  helpId:
+    name: "helpId"
+    in: "path"
+    description: "Identifier for contextual help"
+    required: true
+    type: "string"
+    x-exportParamName: "HelpId"
+  proxyName:
+    name: "proxyName"
+    in: "path"
+    description: "The proxy identifier"
+    required: true
+    type: "string"
+    maxLength: 32
+    pattern: "^[A-Za-z0-9]+$"
+    x-exportParamName: "ProxyName"
+  hostName:
+    name: "hostName"
+    in: "path"
+    description: "Host Name"
+    required: true
+    type: "string"
+    x-exportParamName: "HostName"
+  proxyTemplateName:
+    name: "proxyTemplateName"
+    in: "query"
+    description: "Proxy template identifier"
+    required: true
+    type: "string"
+    x-exportParamName: "ProxyTemplateName"
