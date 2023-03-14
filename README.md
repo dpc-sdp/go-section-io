@@ -169,11 +169,14 @@ Class | Method | HTTP request | Description
 
 Example
 ```golang
-auth := context.WithValue(context.Background(), sw.ContextBasicAuth, sw.BasicAuth{
-	UserName: "username",
-	Password: "password",
+auth := context.WithValue(context.Background(), sectionio.ContextBasicAuth, sectionio.BasicAuth{
+    UserName: "username",
+    Password: "password",
 })
-r, err := client.Service.Operation(auth, args)
+
+cfg := sectionio.NewConfiguration()
+client := sectionio.NewAPIClient(cfg)
+engaged, r, err := client.DomainApi.VerifyEngaged(auth, 1234, "foo.com")
 ```
 ## sectionToken
 - **Type**: API key 
