@@ -10,4 +10,5 @@
 package sectionio
 
 type DomainList struct {
+	Items []DomainListInner
 }
